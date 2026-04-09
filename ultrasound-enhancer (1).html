@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>محسّن صور السونار</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --bg2: #13161e;
+      --bg3: #1a1e28;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #e8eaf0;
+      --text2: #8a8fa8;
+      --text3: #555a72;
+      --accent: #4f8ef7;
+      --accent-bg: rgba(79,142,247,0.12);
+      --accent-border: rgba(79,142,247,0.3);
+      --success: #3ecf8e;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans Arabic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-icon {
+      width: 36px; height: 36px;
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header-title { font-size: 16px; font-weight: 600; color: var(--text); }
+    .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+    .header-badge {
+      margin-right: auto;
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    /* Main layout */
+    .main { display: flex; height: calc(100vh - 65px); overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 300px;
+      min-width: 300px;
+      background: var(--bg2);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+
+    /* Controls */
+    .control { margin-bottom: 14px; }
+    .control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+    .control-label { font-size: 13px; color: var(--text2); }
+    .control-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      padding: 1px 8px;
+      border-radius: 4px;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--bg3);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg2);
+      box-shadow: 0 0 0 3px var(--accent-bg);
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    input[type=range]:hover::-webkit-slider-thumb { box-shadow: 0 0 0 5px var(--accent-bg); }
+
+    /* Theme grid */
+    .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .theme-btn {
+      padding: 8px 6px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      font-family: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .theme-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg2); }
+    .theme-btn.active {
+      border-color: var(--accent-border);
+      background: var(--accent-bg);
+      color: var(--accent);
+    }
+    .theme-swatch { width: 100%; height: 20px; border-radius: 4px; }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); }
+
+    /* Action buttons */
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      margin-bottom: 8px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: #6aa0f9; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--bg3);
+      color: var(--text2);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--border2); color: var(--text); }
+
+    /* Canvas area */
+    .canvas-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 12px 20px 0;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      padding: 8px 18px;
+      font-size: 13px;
+      color: var(--text2);
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      font-family: inherit;
+      background: transparent;
+      transition: all 0.15s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      background: var(--bg);
+      border-color: var(--border);
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stat {
+      flex: 1;
+      background: var(--bg2);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .stat-label { font-size: 11px; color: var(--text3); }
+    .stat-val { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 1px; }
+
+    /* Canvas container */
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+      overflow: auto;
+      position: relative;
+    }
+    .float-download {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .float-download:hover { background: #6aa0f9; transform: translateY(-1px); }
+    .float-download:active { transform: scale(0.97); }
+    .float-download svg { width: 15px; height: 15px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Upload zone */
+    .upload-zone {
+      width: 100%;
+      max-width: 480px;
+      border: 2px dashed var(--border2);
+      border-radius: var(--radius-lg);
+      padding: 48px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-bg); }
+    .upload-icon-wrap {
+      width: 60px; height: 60px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 16px;
+    }
+    .upload-zone h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .upload-zone p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .upload-zone .hint { font-size: 12px; color: var(--text3); margin-top: 12px; }
+
+    /* Output canvas */
+    #output-canvas {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 8px;
+      display: none;
+    }
+
+    /* Compare grid */
+    #compare-view {
+      display: none;
+      width: 100%;
+      gap: 12px;
+    }
+    .cmp-wrap { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .cmp-wrap canvas { width: 100%; border-radius: 8px; display: block; }
+    .cmp-label {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text2);
+      padding: 4px 10px;
+      background: var(--bg2);
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    #file-input { display: none; }
+
+    /* Processing indicator */
+    .processing {
+      position: absolute;
+      inset: 0;
+      background: rgba(13,15,20,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      display: none;
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Scrollbar for canvas area */
+    .canvas-container::-webkit-scrollbar { width: 6px; height: 6px; }
+    .canvas-container::-webkit-scrollbar-track { background: transparent; }
+    .canvas-container::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    @media (max-width: 768px) {
+      .main { flex-direction: column; height: auto; }
+      .sidebar { width: 100%; min-width: unset; height: auto; overflow: visible; }
+      .canvas-area { height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-icon">🩺</div>
+  <div>
+    <div class="header-title">محسّن صور السونار</div>
+    <div class="header-sub">Ultrasound Image Enhancer</div>
+  </div>
+  <span class="header-badge">v2.0</span>
+</header>
+
+<div class="main">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <div>
+      <div class="section-title">تعزيز التفاصيل</div>
+      <div class="control">
+        <div class="control-header">
+          <span class="control-label">CLAHE — عمق التفاصيل</span>
+          <span class="control-value" id="clahe-val">2.0</span>
+        </div>
+        <input type="range" id="clahe" min="1" max="5" step="0.5" value="2">
+      </div>
+      <div class="control">
+        <div class="control-header">
+          <span class="control-label">حدة الحواف</span>
+          <span class="control-value" id="sharp-val">1.0</span>
+        </div>
+        <input type="range" id="sharp" min="0" max="3" step="0.5" value="1">
+      </div>
+      <div class="control">
+        <div class="control-header">
+          <span class="control-label">تقليل الضوضاء</span>
+          <span class="control-value" id="denoise-val">0</span>
+        </div>
+        <input type="range" id="denoise" min="0" max="10" step="1" value="0">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div>
+      <div class="section-title">ضبط الإضاءة</div>
+      <div class="control">
+        <div class="control-header">
+          <span class="control-label">السطوع</span>
+          <span class="control-value" id="bright-val">0</span>
+        </div>
+        <input type="range" id="bright" min="-80" max="80" step="5" value="0">
+      </div>
+      <div class="control">
+        <div class="control-header">
+          <span class="control-label">التباين</span>
+          <span class="control-value" id="contrast-val">1.0</span>
+        </div>
+        <input type="range" id="contrast" min="0.5" max="2.5" step="0.1" value="1">
+      </div>
+      <div class="control">
+        <div class="control-header">
+          <span class="control-label">نقطة الأبيض (Gamma)</span>
+          <span class="control-value" id="gamma-val">1.0</span>
+        </div>
+        <input type="range" id="gamma" min="0.3" max="2.5" step="0.1" value="1">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div>
+      <div class="section-title">نظام الألوان</div>
+      <div class="theme-grid">
+        <button class="theme-btn active" data-theme="gray">
+          <canvas class="theme-swatch" id="sw-gray"></canvas>
+          رمادي
+        </button>
+        <button class="theme-btn" data-theme="jet">
+          <canvas class="theme-swatch" id="sw-jet"></canvas>
+          حراري
+        </button>
+        <button class="theme-btn" data-theme="bone">
+          <canvas class="theme-swatch" id="sw-bone"></canvas>
+          عظمي
+        </button>
+        <button class="theme-btn" data-theme="magma">
+          <canvas class="theme-swatch" id="sw-magma"></canvas>
+          ماغما
+        </button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div>
+      <div class="section-title">الإجراءات</div>
+      <button class="btn btn-primary" id="save-btn" disabled>تحميل الصورة المحسّنة</button>
+      <button class="btn btn-secondary" id="reset-btn">إعادة تعيين الإعدادات</button>
+      <button class="btn btn-secondary" id="new-btn">رفع صورة جديدة</button>
+    </div>
+
+  </aside>
+
+  <!-- Canvas Area -->
+  <section class="canvas-area">
+
+    <div class="tabs">
+      <button class="tab active" data-tab="enhanced">المحسّنة</button>
+      <button class="tab" data-tab="original">الأصلية</button>
+      <button class="tab" data-tab="compare">مقارنة ثلاثية</button>
+    </div>
+
+    <div class="stats-bar" id="stats-bar" style="display:none;">
+      <div class="stat">
+        <div>
+          <div class="stat-label">الأبعاد</div>
+          <div class="stat-val" id="stat-dim">—</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div>
+          <div class="stat-label">الحجم</div>
+          <div class="stat-val" id="stat-size">—</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div>
+          <div class="stat-label">متوسط السطوع</div>
+          <div class="stat-val" id="stat-bright">—</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div>
+          <div class="stat-label">نسبة التحسين</div>
+          <div class="stat-val" id="stat-improve">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-container" id="canvas-container">
+      <button class="float-download" id="float-dl">
+        <svg viewBox="0 0 24 24"><path d="M12 3v13M6 11l6 6 6-6"/><path d="M3 20h18"/></svg>
+        تحميل الصورة
+      </button>
+      <div class="upload-zone" id="upload-zone">
+        <div class="upload-icon-wrap">🩺</div>
+        <h3>ارفع صورة سونار</h3>
+        <p>اضغط لاختيار ملف أو اسحب وأفلت الصورة هنا</p>
+        <p class="hint">يدعم PNG، JPG، BMP، TIFF — حتى 50MB</p>
+      </div>
+      <canvas id="output-canvas"></canvas>
+      <div id="compare-view" style="display:none; width:100%; display:none; flex-direction:row; gap:12px;">
+        <div class="cmp-wrap">
+          <canvas id="c-orig"></canvas>
+          <div class="cmp-label">الأصلية</div>
+        </div>
+        <div class="cmp-wrap">
+          <canvas id="c-clahe"></canvas>
+          <div class="cmp-label">تعزيز CLAHE</div>
+        </div>
+        <div class="cmp-wrap">
+          <canvas id="c-final"></canvas>
+          <div class="cmp-label">النهائية</div>
+        </div>
+      </div>
+      <div class="processing" id="processing"><div class="spinner"></div></div>
+    </div>
+
+  </section>
+</div>
+
+<canvas id="work-canvas" style="display:none;"></canvas>
+<input type="file" id="file-input" accept="image/*">
+
+<script>
+// ─── State ───────────────────────────────────────────────
+let origImageData = null;
+let currentTheme = 'gray';
+let currentTab = 'enhanced';
+let origBrightness = 0;
+let enhancedBrightness = 0;
+
+// ─── DOM refs ─────────────────────────────────────────────
+const uploadZone   = document.getElementById('upload-zone');
+const fileInput    = document.getElementById('file-input');
+const outputCanvas = document.getElementById('output-canvas');
+const workCanvas   = document.getElementById('work-canvas');
+const compareView  = document.getElementById('compare-view');
+const statsBar     = document.getElementById('stats-bar');
+const processing   = document.getElementById('processing');
+const saveBtn      = document.getElementById('save-btn');
+const ctx          = outputCanvas.getContext('2d');
+const wctx         = workCanvas.getContext('2d');
+
+// ─── Upload ───────────────────────────────────────────────
+uploadZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => e.target.files[0] && loadImage(e.target.files[0]));
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag');
+  e.dataTransfer.files[0] && loadImage(e.dataTransfer.files[0]);
+});
+
+function loadImage(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      workCanvas.width = img.width;
+      workCanvas.height = img.height;
+      wctx.drawImage(img, 0, 0);
+      origImageData = wctx.getImageData(0, 0, img.width, img.height);
+
+      uploadZone.style.display = 'none';
+      document.getElementById('stats-row') && (document.getElementById('stats-row').style.display = 'grid');
+      statsBar.style.display = 'flex';
+      saveBtn.disabled = false;
+      floatDl.style.display = 'flex';
+
+      document.getElementById('stat-dim').textContent = img.width + ' × ' + img.height;
+      document.getElementById('stat-size').textContent = (file.size / 1024).toFixed(0) + ' KB';
+
+      const gray = toGray(origImageData.data);
+      origBrightness = avgBrightness(gray);
+
+      processImage();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── Image processing ─────────────────────────────────────
+function toGray(data) {
+  const g = new Uint8ClampedArray(data.length / 4);
+  for (let i = 0; i < g.length; i++)
+    g[i] = Math.round(0.299 * data[i*4] + 0.587 * data[i*4+1] + 0.114 * data[i*4+2]);
+  return g;
+}
+
+function avgBrightness(gray) {
+  let s = 0;
+  for (let i = 0; i < gray.length; i++) s += gray[i];
+  return Math.round(s / gray.length);
+}
+
+function applyCLAHE(gray, w, h, clip) {
+  const NX = 8, NY = 8;
+  // Build per-tile CDFs
+  const tileCDFs = [];
+  const tileSizes = [];
+  for (let ty = 0; ty < NY; ty++) {
+    for (let tx = 0; tx < NX; tx++) {
+      const x0 = Math.round(tx * w / NX), y0 = Math.round(ty * h / NY);
+      const x1 = Math.round((tx+1) * w / NX), y1 = Math.round((ty+1) * h / NY);
+      const hist = new Array(256).fill(0);
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) hist[gray[y*w+x]]++;
+      const nPix = (x1-x0)*(y1-y0);
+      const lim = Math.max(1, Math.round(clip * nPix / 256));
+      let excess = 0;
+      for (let i = 0; i < 256; i++) { if (hist[i] > lim) { excess += hist[i]-lim; hist[i]=lim; } }
+      const add = Math.floor(excess / 256);
+      for (let i = 0; i < 256; i++) hist[i] += add;
+      const cdf = new Array(256);
+      cdf[0] = hist[0];
+      for (let i = 1; i < 256; i++) cdf[i] = cdf[i-1] + hist[i];
+      const cmin = cdf.find(v => v > 0) || 0;
+      const cmax = nPix - cmin;
+      // Normalize CDF to 0-255 lookup
+      const lut = new Uint8Array(256);
+      for (let i = 0; i < 256; i++)
+        lut[i] = cmax > 0 ? Math.round((cdf[i] - cmin) / cmax * 255) : i;
+      tileCDFs.push(lut);
+      tileSizes.push({ x0, y0, x1, y1 });
+    }
+  }
+
+  // Apply with bilinear interpolation between tile centers
+  const out = new Uint8ClampedArray(gray.length);
+  const tileCX = [], tileCY = [];
+  for (let ty = 0; ty < NY; ty++) for (let tx = 0; tx < NX; tx++) {
+    const { x0, y0, x1, y1 } = tileSizes[ty*NX+tx];
+    tileCX.push((x0+x1)/2); tileCY.push((y0+y1)/2);
+  }
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const v = gray[y*w+x];
+      // Find surrounding 4 tile centers
+      let tx1 = NX-2, tx2 = NX-1;
+      for (let t = 0; t < NX-1; t++) { if (tileCX[t] <= x && tileCX[t+1] >= x) { tx1=t; tx2=t+1; break; } }
+      let ty1 = NY-2, ty2 = NY-1;
+      for (let t = 0; t < NY-1; t++) { if (tileCY[t*NX] <= y && tileCY[(t+1)*NX] >= y) { ty1=t; ty2=t+1; break; } }
+      const cx1 = tileCX[tx1], cx2 = tileCX[tx2];
+      const cy1 = tileCY[ty1*NX], cy2 = tileCY[(ty2)*NX];
+      const fx = cx2 > cx1 ? (x - cx1) / (cx2 - cx1) : 0;
+      const fy = cy2 > cy1 ? (y - cy1) / (cy2 - cy1) : 0;
+      const i00 = tileCDFs[ty1*NX+tx1][v];
+      const i10 = tileCDFs[ty1*NX+tx2][v];
+      const i01 = tileCDFs[ty2*NX+tx1][v];
+      const i11 = tileCDFs[ty2*NX+tx2][v];
+      out[y*w+x] = Math.round(
+        i00*(1-fx)*(1-fy) + i10*fx*(1-fy) + i01*(1-fx)*fy + i11*fx*fy
+      );
+    }
+  }
+  return out;
+}
+
+function gaussBlur(gray, w, h, sigma) {
+  const r = Math.ceil(sigma * 2);
+  const k = []; let s = 0;
+  for (let i = -r; i <= r; i++) { const v = Math.exp(-(i*i)/(2*sigma*sigma)); k.push(v); s+=v; }
+  for (let i = 0; i < k.length; i++) k[i] /= s;
+  const tmp = new Float32Array(gray.length);
+  const out = new Uint8ClampedArray(gray.length);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      let val = 0;
+      for (let ki = -r; ki <= r; ki++) val += gray[y*w + Math.min(Math.max(x+ki,0),w-1)] * k[ki+r];
+      tmp[y*w+x] = val;
+    }
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      let val = 0;
+      for (let ki = -r; ki <= r; ki++) val += tmp[Math.min(Math.max(y+ki,0),h-1)*w+x] * k[ki+r];
+      out[y*w+x] = Math.min(255, Math.max(0, Math.round(val)));
+    }
+  return out;
+}
+
+function unsharp(gray, w, h, amount) {
+  if (amount === 0) return gray;
+  const blurred = gaussBlur(gray, w, h, 2);
+  const out = new Uint8ClampedArray(gray.length);
+  for (let i = 0; i < gray.length; i++)
+    out[i] = Math.min(255, Math.max(0, Math.round(gray[i]*(1+amount) - blurred[i]*amount)));
+  return out;
+}
+
+function gammaCorrect(gray, g) {
+  if (Math.abs(g - 1.0) < 0.01) return gray;
+  const out = new Uint8ClampedArray(gray.length);
+  const lut = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) lut[i] = Math.round(Math.pow(i/255, 1/g) * 255);
+  for (let i = 0; i < gray.length; i++) out[i] = lut[gray[i]];
+  return out;
+}
+
+function brightnessContrast(gray, b, c) {
+  const out = new Uint8ClampedArray(gray.length);
+  for (let i = 0; i < gray.length; i++)
+    out[i] = Math.min(255, Math.max(0, Math.round((gray[i]+b)*c)));
+  return out;
+}
+
+// ─── Colormaps ────────────────────────────────────────────
+const colormaps = {
+  gray:  g => [g, g, g],
+  jet: g => {
+    const t = g/255;
+    return [
+      Math.min(255,Math.max(0,Math.round(255*(1.5-Math.abs(4*t-3))))),
+      Math.min(255,Math.max(0,Math.round(255*(1.5-Math.abs(4*t-2))))),
+      Math.min(255,Math.max(0,Math.round(255*(1.5-Math.abs(4*t-1)))))
+    ];
+  },
+  bone: g => {
+    const t = g/255;
+    return [
+      Math.min(255,Math.round(255*(t*7/8+(t>3/4?(t-3/4)*8/7*0.25:0)))),
+      Math.min(255,Math.round(255*(t*7/8+(t>3/8?Math.min((t-3/8)*8/7,1/8):0)))),
+      Math.min(255,Math.round(255*t))
+    ];
+  },
+  magma: g => {
+    const stops=[[0,0,4],[28,16,68],[79,18,123],[129,37,129],[181,54,122],[229,80,100],[251,135,97],[254,194,135],[252,253,191]];
+    const t=g/255*(stops.length-1), i=Math.min(Math.floor(t),stops.length-2), f=t-i;
+    return stops[i].map((v,j)=>Math.round(v+f*(stops[i+1][j]-v)));
+  }
+};
+
+function toRGBA(gray, theme) {
+  const map = colormaps[theme] || colormaps.gray;
+  const rgba = new Uint8ClampedArray(gray.length*4);
+  for (let i = 0; i < gray.length; i++) {
+    const [r,g,b] = map(gray[i]);
+    rgba[i*4]=r; rgba[i*4+1]=g; rgba[i*4+2]=b; rgba[i*4+3]=255;
+  }
+  return rgba;
+}
+
+function putToCanvas(canvas, rgba, w, h) {
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').putImageData(new ImageData(rgba,w,h),0,0);
+}
+
+// ─── Main process ─────────────────────────────────────────
+function processImage() {
+  if (!origImageData) return;
+  const { width: w, height: h, data } = origImageData;
+  const clahe   = parseFloat(document.getElementById('clahe').value);
+  const sharp   = parseFloat(document.getElementById('sharp').value);
+  const denoise = parseFloat(document.getElementById('denoise').value);
+  const bright  = parseFloat(document.getElementById('bright').value);
+  const contrast= parseFloat(document.getElementById('contrast').value);
+  const gamma   = parseFloat(document.getElementById('gamma').value);
+
+  let gray = toGray(data);
+  const grayOrig = gray.slice();
+
+  if (denoise > 0) gray = gaussBlur(gray, w, h, denoise*0.5+0.3);
+  const grayClahe = applyCLAHE(gray, w, h, clahe);
+  let grayFinal = unsharp(grayClahe, w, h, sharp);
+  grayFinal = brightnessContrast(grayFinal, bright, contrast);
+  grayFinal = gammaCorrect(grayFinal, gamma);
+
+  enhancedBrightness = avgBrightness(grayFinal);
+  document.getElementById('stat-bright').textContent = enhancedBrightness;
+  const improve = origBrightness > 0 ? Math.round(Math.abs(enhancedBrightness - origBrightness) / origBrightness * 100) : 0;
+  document.getElementById('stat-improve').textContent = '+' + improve + '%';
+
+  const finalRGBA = toRGBA(grayFinal, currentTheme);
+
+  outputCanvas.style.display = 'none';
+  compareView.style.display = 'none';
+
+  if (currentTab === 'compare') {
+    compareView.style.display = 'flex';
+    putToCanvas(document.getElementById('c-orig'), toRGBA(grayOrig,'gray'), w, h);
+    putToCanvas(document.getElementById('c-clahe'), toRGBA(grayClahe,'gray'), w, h);
+    putToCanvas(document.getElementById('c-final'), finalRGBA, w, h);
+  } else {
+    outputCanvas.style.display = 'block';
+    const srcGray = currentTab === 'original' ? grayOrig : grayFinal;
+    const srcTheme = currentTab === 'original' ? 'gray' : currentTheme;
+    putToCanvas(outputCanvas, toRGBA(srcGray, srcTheme), w, h);
+  }
+}
+
+// ─── Controls ─────────────────────────────────────────────
+const sliders = [
+  { id: 'clahe',    valId: 'clahe-val',    fmt: v => v.toFixed(1) },
+  { id: 'sharp',    valId: 'sharp-val',    fmt: v => v.toFixed(1) },
+  { id: 'denoise',  valId: 'denoise-val',  fmt: v => v.toFixed(0) },
+  { id: 'bright',   valId: 'bright-val',   fmt: v => v.toFixed(0) },
+  { id: 'contrast', valId: 'contrast-val', fmt: v => v.toFixed(1) },
+  { id: 'gamma',    valId: 'gamma-val',    fmt: v => v.toFixed(1) },
+];
+sliders.forEach(({ id, valId, fmt }) => {
+  const el = document.getElementById(id);
+  const vEl = document.getElementById(valId);
+  el.addEventListener('input', () => { vEl.textContent = fmt(parseFloat(el.value)); processImage(); });
+});
+
+document.querySelectorAll('.theme-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTheme = btn.dataset.theme;
+    processImage();
+  });
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentTab = tab.dataset.tab;
+    processImage();
+  });
+});
+
+const floatDl = document.getElementById('float-dl');
+floatDl.addEventListener('click', () => {
+  if (!origImageData) return;
+  const src = currentTab === 'compare' ? document.getElementById('c-final') : outputCanvas;
+  const a = document.createElement('a');
+  a.download = 'ultrasound-enhanced.png';
+  a.href = src.toDataURL('image/png');
+  a.click();
+});
+
+saveBtn.addEventListener('click', () => {
+  if (!origImageData) return;
+  const a = document.createElement('a');
+  a.download = 'ultrasound-enhanced.png';
+  a.href = outputCanvas.toDataURL('image/png');
+  a.click();
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  const defaults = { clahe:'2', sharp:'1', denoise:'0', bright:'0', contrast:'1', gamma:'1' };
+  sliders.forEach(({ id, valId, fmt }) => {
+    document.getElementById(id).value = defaults[id];
+    document.getElementById(valId).textContent = fmt(parseFloat(defaults[id]));
+  });
+  currentTheme = 'gray';
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-theme="gray"]').classList.add('active');
+  processImage();
+});
+
+document.getElementById('new-btn').addEventListener('click', () => {
+  origImageData = null;
+  outputCanvas.style.display = 'none';
+  compareView.style.display = 'none';
+  uploadZone.style.display = 'block';
+  statsBar.style.display = 'none';
+  saveBtn.disabled = true;
+  floatDl.style.display = 'none';
+  fileInput.value = '';
+});
+
+// ─── Draw theme swatches ──────────────────────────────────
+function drawSwatch(id, theme) {
+  const c = document.getElementById(id);
+  c.width = 120; c.height = 20;
+  const ctx = c.getContext('2d');
+  const map = colormaps[theme];
+  for (let x = 0; x < 120; x++) {
+    const [r,g,b] = map(Math.round(x/119*255));
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(x, 0, 1, 20);
+  }
+}
+drawSwatch('sw-gray','gray');
+drawSwatch('sw-jet','jet');
+drawSwatch('sw-bone','bone');
+drawSwatch('sw-magma','magma');
+</script>
+</body>
+</html>
